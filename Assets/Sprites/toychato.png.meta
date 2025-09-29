@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: f8129a5e027240241959bafdd6c052ea
+guid: cb91357e6335f074baabf4839aec240b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5695510268727649605
-    second: alo1_0
+      213: -4103944386102603822
+    second: toychato_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 603
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: alo1_0
+      name: toychato_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 20
-        height: 29
+        x: 9
+        y: 12
+        width: 396
+        height: 603
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bba16e1369b75f0b0800000000000000
-      internalID: -5695510268727649605
+      spriteID: 2df4560135cdb07c0800000000000000
+      internalID: -4103944386102603822
       vertices: []
       indices: 
       edges: []
@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      toychato_0: -4103944386102603822
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

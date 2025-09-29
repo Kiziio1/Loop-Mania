@@ -1,16 +1,75 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Puedes mantener esto por si lo necesitas más tarde
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Sprites de Dirección")]
+    public Sprite spriteArriba;
+    public Sprite spriteAbajo;
+    public Sprite spriteDerecha;
+    private SpriteRenderer spriteRenderer; 
     private bool juegoTerminado = false;
+    private Vector2Int direccionActual = Vector2Int.right; 
+
+    void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        ActualizarSprite(); 
+    }
 
     public void Avanzar()
     {
         if (juegoTerminado) return;
+        transform.position += (Vector3)(Vector2)direccionActual;
+        Debug.Log("Player avanzó en dirección " + direccionActual + ". Nueva posición: " + transform.position);
+    }
 
-        transform.position += Vector3.right;
-        Debug.Log("Player avanzó a la posición: " + transform.position);
+    public void GirarDerecha()
+    {
+        if (juegoTerminado) return;
+        if (direccionActual == Vector2Int.right) direccionActual = Vector2Int.down;
+        else if (direccionActual == Vector2Int.down) direccionActual = Vector2Int.left;
+        else if (direccionActual == Vector2Int.left) direccionActual = Vector2Int.up;
+        else if (direccionActual == Vector2Int.up) direccionActual = Vector2Int.right;
+
+        ActualizarSprite(); 
+        Debug.Log("Player giró a la derecha. Nueva dirección: " + direccionActual);
+    }
+
+    public void GirarIzquierda()
+    {
+        if (juegoTerminado) return;
+        if (direccionActual == Vector2Int.right) direccionActual = Vector2Int.up;
+        else if (direccionActual == Vector2Int.up) direccionActual = Vector2Int.left;
+        else if (direccionActual == Vector2Int.left) direccionActual = Vector2Int.down;
+        else if (direccionActual == Vector2Int.down) direccionActual = Vector2Int.right;
+
+        ActualizarSprite(); 
+        Debug.Log("Player giró a la izquierda. Nueva dirección: " + direccionActual);
+    }
+
+    private void ActualizarSprite()
+    {
+        if (direccionActual == Vector2Int.right)
+        {
+            spriteRenderer.sprite = spriteDerecha;
+            spriteRenderer.flipX = false; 
+        }
+        else if (direccionActual == Vector2Int.left)
+        {
+            spriteRenderer.sprite = spriteDerecha; 
+            spriteRenderer.flipX = true;   
+        }
+        else if (direccionActual == Vector2Int.up)
+        {
+            spriteRenderer.sprite = spriteArriba;
+            spriteRenderer.flipX = false;
+        }
+        else if (direccionActual == Vector2Int.down)
+        {
+            spriteRenderer.sprite = spriteAbajo;
+            spriteRenderer.flipX = false;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -19,8 +78,12 @@ public class PlayerController : MonoBehaviour
 
         if (other.CompareTag("Goal"))
         {
-            Debug.Log("¡GANASTE! Tocaste la meta.");
-            juegoTerminado = true;
+            Debug.Log("¡GANASTE EL NIVEL! Cargando el siguiente...");
+            juegoTerminado = true; 
+
+            FindAnyObjectByType<GameManager>().CargarSiguienteNivel();
+
+            Destroy(gameObject); 
         }
         else if (other.CompareTag("Hazard"))
         {
@@ -31,7 +94,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     void Update()
     {
         if (juegoTerminado) return;
@@ -39,14 +101,37 @@ public class PlayerController : MonoBehaviour
         var teclado = Keyboard.current;
         if (teclado == null) return;
 
-        if (teclado.rightArrowKey.wasPressedThisFrame)
+        if (teclado.dKey.wasPressedThisFrame)
         {
-            transform.position += Vector3.right;
+            Avanzar();
         }
-        if (teclado.leftArrowKey.wasPressedThisFrame)
+        if (teclado.eKey.wasPressedThisFrame)
         {
-            transform.position += Vector3.left;
+            GirarDerecha();
+        }
+        if (teclado.qKey.wasPressedThisFrame)
+        {
+            GirarIzquierda();
         }
     }
-    
+
+    public bool HayObstaculoEnfrente()
+    {
+        Vector2 direccionActualFloat = (Vector2)direccionActual; 
+
+        Vector2 puntoDeInicio = (Vector2)transform.position + (direccionActualFloat * 0.2f);
+        float distanciaDelRayo = 0.8f;
+
+        Debug.DrawRay(puntoDeInicio, direccionActualFloat * distanciaDelRayo, Color.green);
+        RaycastHit2D hit = Physics2D.Raycast(puntoDeInicio, direccionActualFloat, distanciaDelRayo);
+
+        if (hit.collider != null && (hit.collider.CompareTag("Obstaculo") || hit.collider.CompareTag("Hazard")))
+        {
+            Debug.DrawRay(puntoDeInicio, direccionActualFloat * distanciaDelRayo, Color.red);
+            Debug.Log("¡Obstáculo detectado: " + hit.collider.name + "!");
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -1,13 +1,29 @@
 using UnityEngine;
-using UnityEngine.EventSystems; // Necesario para la interfaz de Drop
+using UnityEngine.EventSystems;
 
 public class DropZone : MonoBehaviour, IDropHandler
 {
+
     public void OnDrop(PointerEventData eventData)
     {
-        Debug.Log("¡Bloque soltado en el panel!");
         GameObject bloqueArrastrado = eventData.pointerDrag;
 
-        bloqueArrastrado.transform.SetParent(this.transform);
+        if (bloqueArrastrado != null)
+        {
+            bloqueArrastrado.transform.SetParent(this.transform);
+            bloqueArrastrado.transform.SetAsLastSibling();
+
+            ResizeBloqueFor resizerContenedor = GetComponentInParent<ResizeBloqueFor>();
+            if (resizerContenedor != null)
+            {
+                resizerContenedor.IniciarActualizacionAltura();
+            }
+
+            PanelDinamico panelDinamico = GetComponent<PanelDinamico>();
+            if (panelDinamico != null)
+            {
+                panelDinamico.IniciarActualizacionAltura();
+            }
+        }
     }
 }
