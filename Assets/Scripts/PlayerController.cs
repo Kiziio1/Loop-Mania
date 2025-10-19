@@ -7,16 +7,19 @@ public class PlayerController : MonoBehaviour
     public Sprite spriteArriba;
     public Sprite spriteAbajo;
     public Sprite spriteDerecha;
-    private SpriteRenderer spriteRenderer; 
+    private SpriteRenderer spriteRenderer;
     private bool juegoTerminado = false;
+    public bool estaVivo { get; private set; } = true; 
+    public bool estaEnLaMeta { get; private set; } = false;
     private Vector2Int direccionActual = Vector2Int.right; 
 
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        ActualizarSprite(); 
+        ActualizarSprite();
+        estaVivo = true; 
+        estaEnLaMeta = false; 
     }
-
     public void Avanzar()
     {
         if (juegoTerminado) return;
@@ -72,23 +75,23 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter2D (Collider2D other)
     {
-        if (juegoTerminado) return;
+        if (juegoTerminado) return; 
 
-        if (other.CompareTag("Goal"))
+        if (other.CompareTag ("Goal"))
         {
-            Debug.Log("¡GANASTE EL NIVEL! Cargando el siguiente...");
-            juegoTerminado = true; 
-
-            FindAnyObjectByType<GameManager>().CargarSiguienteNivel();
-
-            Destroy(gameObject); 
+            Debug.Log("¡GANASTE EL NIVEL!");
+            juegoTerminado = true;
+            estaEnLaMeta = true; 
+            
+            // YA NO LLAMAMOS A MostrarResultadosNivel() DESDE AQUÍ
         }
         else if (other.CompareTag("Hazard"))
         {
             Debug.Log("¡PERDISTE! Caíste al abismo.");
             juegoTerminado = true;
+            estaVivo = false; 
             this.enabled = false;
             GetComponent<SpriteRenderer>().color = Color.gray;
         }
@@ -117,7 +120,7 @@ public class PlayerController : MonoBehaviour
 
     public bool HayObstaculoEnfrente()
     {
-        Vector2 direccionActualFloat = (Vector2)direccionActual; 
+        Vector2 direccionActualFloat = (Vector2)direccionActual;
 
         Vector2 puntoDeInicio = (Vector2)transform.position + (direccionActualFloat * 0.2f);
         float distanciaDelRayo = 0.8f;
@@ -134,4 +137,16 @@ public class PlayerController : MonoBehaviour
 
         return false;
     }
+    
+    public void ForzarFallo()
+    {
+        if (juegoTerminado) return; 
+
+        Debug.Log("¡PERDISTE! El programa no llegó a la meta.");
+        juegoTerminado = true;
+        estaVivo = false; 
+        this.enabled = false;
+        GetComponent<SpriteRenderer>().color = Color.gray;
+    }
+    
 }

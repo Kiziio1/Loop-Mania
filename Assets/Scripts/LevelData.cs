@@ -28,4 +28,7 @@ public class LevelData : ScriptableObject
     [Header("Bloques Permitidos")]
     public bool permitirBucleFor = false;
     public bool permitirCondicionalIf = false;
+
+    [Header("Configuración de Estrellas")]
+    public int movimientosOptimos;
 }

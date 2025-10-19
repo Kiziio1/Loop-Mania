@@ -25,7 +25,6 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     {
         canvasGroup = GetComponent<CanvasGroup>();
         ActualizarUITexto();
-
         if (tipoDeComando == TipoComando.BucleFor)
         {
             if (botonIncrementar != null)
@@ -63,23 +62,38 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             textoRepeticiones.text = repeticionesBucle.ToString();
         }
     }
-    
-    public IEnumerator Ejecutar(PlayerController player, float tiempoDeEspera)
+
+    // **AQUÍ ESTÁ EL ARREGLO PARA EL PROBLEMA 1 (Parte B)**
+    // El método ahora recibe un GameManager en lugar de un float
+    public IEnumerator Ejecutar(GameManager gameManager, PlayerController player)
     {
         switch (tipoDeComando)
         {
             case TipoComando.Avanzar:
+                gameManager.SetBloqueActual(this.transform); // Mueve la flecha aquí
                 player.Avanzar();
-                yield return new WaitForSeconds(tiempoDeEspera);
+                yield return new WaitForSeconds(gameManager.sliderVelocidad.value);
+                
+                // Comprueba si el jugador murió DESPUÉS de avanzar
+                if (!player.estaVivo)
+                {
+                    gameManager.SetFlechaEstadoFallo(); // Pone la flecha roja
+                    yield break; // Detiene la ejecución
+                }
                 break;
+                
             case TipoComando.GirarDerecha:
+                gameManager.SetBloqueActual(this.transform); // Mueve la flecha aquí
                 player.GirarDerecha();
-                yield return new WaitForSeconds(tiempoDeEspera);
+                yield return new WaitForSeconds(gameManager.sliderVelocidad.value);
                 break;
+                
             case TipoComando.GirarIzquierda:
+                gameManager.SetBloqueActual(this.transform); // Mueve la flecha aquí
                 player.GirarIzquierda();
-                yield return new WaitForSeconds(tiempoDeEspera);
+                yield return new WaitForSeconds(gameManager.sliderVelocidad.value);
                 break;
+                
             case TipoComando.BucleFor:
                 if (contenedorDeBloquesAnidados != null)
                 {
@@ -90,12 +104,16 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                             BloqueDeComando comando = bloqueAnidado.GetComponent<BloqueDeComando>();
                             if (comando != null)
                             {
-                                yield return StartCoroutine(comando.Ejecutar(player, tiempoDeEspera));
+                                yield return StartCoroutine(comando.Ejecutar(gameManager, player));
+                                
+                                // Si el bloque de adentro mató al jugador, detiene el bucle
+                                if (!player.estaVivo) { yield break; }
                             }
                         }
                     }
                 }
                 break;
+                
             case TipoComando.CondicionalSi:
                 if (player.HayObstaculoEnfrente())
                 {
@@ -106,7 +124,10 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                             BloqueDeComando comando = bloqueAnidado.GetComponent<BloqueDeComando>();
                             if (comando != null)
                             {
-                                yield return StartCoroutine(comando.Ejecutar(player, tiempoDeEspera));
+                                yield return StartCoroutine(comando.Ejecutar(gameManager, player));
+                                
+                                // Si el bloque de adentro mató al jugador, detiene el if
+                                if (!player.estaVivo) { yield break; }
                             }
                         }
                     }
@@ -121,6 +142,10 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         {
             GameObject clon = Instantiate(gameObject, transform.root);
             clon.transform.position = eventData.position;
+            
+            // **AQUÍ ESTÁ EL ARREGLO DE ORDEN**
+            clon.transform.SetAsLastSibling(); // Pone el clon encima de todo
+
             BloqueDeComando clonScript = clon.GetComponent<BloqueDeComando>();
             clonScript.esOriginalDelBanco = false;
             clonScript.padreOriginal = this.transform.parent;
@@ -140,6 +165,10 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             }
         }
         transform.SetParent(transform.root);
+        
+        // **AQUÍ ESTÁ EL ARREGLO DE ORDEN**
+        transform.SetAsLastSibling(); // Pone el bloque que arrastras encima de todo
+        
         transform.localScale = Vector3.one;
         canvasGroup.blocksRaycasts = false;
         canvasGroup.alpha = 0.6f;
@@ -158,12 +187,10 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         if (esOriginalDelBanco) return;
 
         canvasGroup.alpha = 1f;
-
         if (transform.parent == transform.root)
         {
             transform.SetParent(padreOriginal);
         }
-
         transform.localScale = Vector3.one;
         canvasGroup.blocksRaycasts = true;
     }
@@ -176,11 +203,86 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         if (bloqueArrastrado != null)
         {
             bloqueArrastrado.transform.SetParent(contenedorDeBloquesAnidados);
+
             ResizeBloqueFor resizer = GetComponent<ResizeBloqueFor>();
             if (resizer != null)
             {
                 resizer.IniciarActualizacionAltura();
             }
         }
+    }
+
+    // Nuevo método para contar cuántos bloques "cuesta" este comando
+    public int GetBlockCount()
+    {
+        int count = 1; // El bloque en sí mismo cuenta como 1
+
+        // Si es un contenedor, suma los hijos
+        if (tipoDeComando == TipoComando.BucleFor || tipoDeComando == TipoComando.CondicionalSi)
+        {
+            if (contenedorDeBloquesAnidados != null)
+            {
+                foreach (Transform bloqueAnidado in contenedorDeBloquesAnidados)
+                {
+                    BloqueDeComando comando = bloqueAnidado.GetComponent<BloqueDeComando>();
+                    if (comando != null)
+                    {
+                        count += comando.GetBlockCount(); // Llamada recursiva
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    // Genera un string que representa este bloque y sus hijos
+    public string GetSequenceString()
+    {
+        string sequence = "";
+
+        switch (tipoDeComando)
+        {
+            case TipoComando.Avanzar:
+                sequence = "Avanzar";
+                break;
+            case TipoComando.GirarDerecha:
+                sequence = "GirarDerecha";
+                break;
+            case TipoComando.GirarIzquierda:
+                sequence = "GirarIzquierda";
+                break;
+            case TipoComando.BucleFor:
+                sequence = "BucleFor(" + repeticionesBucle + ")[";
+                if (contenedorDeBloquesAnidados != null)
+                {
+                    foreach (Transform bloqueAnidado in contenedorDeBloquesAnidados)
+                    {
+                        BloqueDeComando comando = bloqueAnidado.GetComponent<BloqueDeComando>();
+                        if (comando != null)
+                        {
+                            // Usa ; como separador para bloques anidados
+                            sequence += comando.GetSequenceString() + "; ";
+                        }
+                    }
+                }
+                sequence += "]";
+                break;
+            case TipoComando.CondicionalSi:
+                sequence = "CondicionalSi[";
+                if (contenedorDeBloquesAnidados != null)
+                {
+                    foreach (Transform bloqueAnidado in contenedorDeBloquesAnidados)
+                    {
+                        BloqueDeComando comando = bloqueAnidado.GetComponent<BloqueDeComando>();
+                        if (comando != null)
+                        {
+                            sequence += comando.GetSequenceString() + "; ";
+                        }
+                    }
+                }
+                sequence += "]";
+                break;
+        }
+        return sequence;
     }
 }
