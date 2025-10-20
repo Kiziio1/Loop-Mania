@@ -84,8 +84,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log("¡GANASTE EL NIVEL!");
             juegoTerminado = true;
             estaEnLaMeta = true; 
-            
-            // YA NO LLAMAMOS A MostrarResultadosNivel() DESDE AQUÍ
+
         }
         else if (other.CompareTag("Hazard"))
         {

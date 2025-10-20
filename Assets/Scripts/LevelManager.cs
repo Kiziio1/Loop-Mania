@@ -9,18 +9,15 @@ public class LevelManager : MonoBehaviour
     public GameObject prefabPlayer;
 
     [Header("Contenedor de Niveles")]
-    public Transform contenedorMapa; // Un objeto vacío para mantener el orden
+    public Transform contenedorMapa; 
 
-    // Carga y construye un nivel basado en un ScriptableObject
     public void CargarNivel(LevelData nivelACargar)
     {
-        // 1. Limpiar el mapa anterior
         foreach (Transform child in contenedorMapa)
         {
             Destroy(child.gameObject);
         }
-
-        // 2. Construir el nuevo mapa
+        
         if (nivelACargar.gridLayout.Length != nivelACargar.ancho * nivelACargar.alto)
         {
             Debug.LogError("¡ERROR! El tamaño del gridLayout no coincide con el ancho y alto del nivel.");

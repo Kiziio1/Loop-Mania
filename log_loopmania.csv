@@ -1,13 +1,6 @@
 Timestamp,ID_Jugador,Nivel,Bloques_Disponibles,Secuencia_Bloques,Gano_Intento,Tiempo_Intento_Seg
-2025-10-18 21:40:19,MeLlamoManuel,,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; ,False,19.32
-2025-10-18 21:41:35,YosoyelEnriqueSISI,,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; Avanzar; ,False,3.84
-2025-10-18 21:54:30,xdlolsoyunnegrooo,,Avanzar; GirarDerecha; GirarIzquierda; BucleFor,Avanzar; ,False,12.43
-2025-10-18 21:54:50,xdlolsoyunnegrooo,,Avanzar; GirarDerecha; GirarIzquierda; BucleFor; CondicionalSi,Avanzar; GirarIzquierda; GirarDerecha; Avanzar; ,False,32.23
-2025-10-18 22:59:54,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 1,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; Avanzar; ,False,4.47
-2025-10-18 23:00:04,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 1,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; ,True,8.32
-2025-10-18 23:00:17,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 2,Avanzar; GirarDerecha; GirarIzquierda; BucleFor,BucleFor(7)[GirarIzquierda; Avanzar; GirarDerecha; Avanzar; ]; ,False,11.85
-2025-10-18 23:00:32,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 2,Avanzar; GirarDerecha; GirarIzquierda; BucleFor,BucleFor(7)[GirarIzquierda; Avanzar; GirarDerecha; Avanzar; ]; Avanzar; ,True,14.02
-2025-10-18 23:00:42,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 3,Avanzar; GirarDerecha; GirarIzquierda; BucleFor; CondicionalSi,GirarIzquierda; Avanzar; Avanzar; ,False,8.79
-2025-10-18 23:01:52,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 3,Avanzar; GirarDerecha; GirarIzquierda; BucleFor; CondicionalSi,GirarIzquierda; BucleFor(9)[CondicionalSi[GirarDerecha; ]; Avanzar; ]; GirarIzquierda; BucleFor(6)[CondicionalSi[GirarDerecha; ]; Avanzar; ]; ,True,40.30
-2025-10-19 02:11:53,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 1,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; ,True,10.35
-2025-10-19 02:33:43,wenaSoyYo el donmario el que le vende la mercaderia,Nivel 1,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; Avanzar; ,True,9.76
+2025-10-20 00:54:32,manolopoyagrande,Nivel 1,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; Avanzar; Avanzar; Avanzar; ,True,5.20
+2025-10-20 01:16:42,manolopoyagrande,Nivel 15,Avanzar; GirarDerecha; GirarIzquierda; BucleFor; CondicionalSi,BucleFor(3)[CondicionalSi[Avanzar; GirarIzquierda; ]; Avanzar; ]; ,False,15.75
+2025-10-20 01:16:51,manolopoyagrande,Nivel 15,Avanzar; GirarDerecha; GirarIzquierda; BucleFor; CondicionalSi,Avanzar; Avanzar; Avanzar; Avanzar; ,False,5.51
+2025-10-20 01:17:07,manolopoyagrande,Nivel 15,Avanzar; GirarDerecha; GirarIzquierda; BucleFor; CondicionalSi,BucleFor(4)[Avanzar; Avanzar; GirarIzquierda; Avanzar; Avanzar; ]; ,False,14.80
+2025-10-20 01:18:35,manolopoyagrande,Nivel 1,Avanzar; GirarDerecha; GirarIzquierda,Avanzar; Avanzar; Avanzar; Avanzar; ,True,4.61

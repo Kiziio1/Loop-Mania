@@ -1498,7 +1498,7 @@ MonoBehaviour:
   m_MinValue: 0.1
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0.5
+  m_Value: 0.55
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -2739,7 +2739,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -8005923643620191441, guid: 6ac18b8b466f829469336fc8119ce6a7, type: 3}
+  m_Sprite: {fileID: -7451953295746623981, guid: 8bd21cf3ee2923547ace502789a616e3, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2774,7 +2774,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -1072, y: 121}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 210, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1202275322
 GameObject:
@@ -2996,8 +2996,20 @@ MonoBehaviour:
   panelPrograma: {fileID: 2084352289}
   secuenciaDeNivel:
   - {fileID: 11400000, guid: cf54e2baaa962334fbcb62904628271f, type: 2}
+  - {fileID: 11400000, guid: 6a30d99be542ce741ac99b702991adef, type: 2}
+  - {fileID: 11400000, guid: 1beb454084f12bb4e8269bb4cef93d61, type: 2}
+  - {fileID: 11400000, guid: 45ff65be0cd249441b4bfd7cf9ead0d2, type: 2}
+  - {fileID: 11400000, guid: 0d4668a05921f2b4d87ee23716f0671d, type: 2}
+  - {fileID: 11400000, guid: 57682feab36fbc843b902f0ad19c8181, type: 2}
   - {fileID: 11400000, guid: a28f7e8b23cdd6841977579203c7ed6a, type: 2}
+  - {fileID: 11400000, guid: b391da0d809dc4041a984271f7aabdcd, type: 2}
+  - {fileID: 11400000, guid: b39756a91c6f9504793b72cb34d51b59, type: 2}
+  - {fileID: 11400000, guid: 41149e74a5cae5b469317f1a14d84f59, type: 2}
+  - {fileID: 11400000, guid: d3fe556f3d8abf5468edcfa94d49f5a9, type: 2}
+  - {fileID: 11400000, guid: e534625e93d88fc42a83dabf550b93c7, type: 2}
+  - {fileID: 11400000, guid: 87274497344080c42969999982f51e2b, type: 2}
   - {fileID: 11400000, guid: 57dd3d180db81ca4b81668dc2439a9c5, type: 2}
+  - {fileID: 11400000, guid: d1b17963b026b92489f7bf1d4da9c05f, type: 2}
   origenDelMapa: {x: -8.36, y: 4.48}
   prefabPiso: {fileID: 949330845704723704, guid: f3017000d9d2fbd41976b68e9ffa1b44, type: 3}
   prefabObstaculo: {fileID: 3927301146881052167, guid: 448083d19bdba0e4085d96255e82797f, type: 3}
@@ -3044,15 +3056,15 @@ RectTransform:
   m_GameObject: {fileID: 1479805429}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 280043073}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: 0}
+  m_AnchoredPosition: {x: 0.000030517578, y: -0.0000009536743}
+  m_SizeDelta: {x: 19.4591, y: -3.2453}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1479805431
 MonoBehaviour:
@@ -3074,8 +3086,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4

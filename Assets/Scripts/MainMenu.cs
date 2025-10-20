@@ -2,6 +2,8 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.UI; 
 using TMPro;
+using System.Collections.Generic; 
+using UnityEngine.InputSystem;
 
 public class MainMenu : MonoBehaviour
 {
@@ -15,14 +17,11 @@ public class MainMenu : MonoBehaviour
     public Button botonComenzarLogin;
 
     [Header("UI de Logros")]
-    public GameObject checkmarkNivel1; 
-    public GameObject checkmarkNivel2; 
-    public GameObject checkmarkNivel3; 
+    public List<GameObject> checkmarksLogros;
 
     [Header("Botones de Niveles")]
-    public Button botonNivel1; 
-    public Button botonNivel2; 
-    public Button botonNivel3; 
+    public List<LevelButton> botonesNivel; 
+    public GameObject starPrefab;
     
     private const string PLAYER_PREF_ID_JUGADOR = "IDJugador";
     
@@ -122,9 +121,7 @@ public class MainMenu : MonoBehaviour
     {
         if (AchievementManager.Instance != null)
         {
-            if (checkmarkNivel1 != null) checkmarkNivel1.SetActive(AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.NIVEL_1_COMPLETADO));
-            if (checkmarkNivel2 != null) checkmarkNivel2.SetActive(AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.NIVEL_2_COMPLETADO));
-            if (checkmarkNivel3 != null) checkmarkNivel3.SetActive(AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.NIVEL_3_COMPLETADO));
+
         }
 
         if (panelLogros != null) panelLogros.SetActive(true);
@@ -145,9 +142,22 @@ public class MainMenu : MonoBehaviour
             nivelMasAlto = AchievementManager.Instance.GetHighestLevel();
         }
 
-        if (botonNivel1 != null) botonNivel1.interactable = (1 <= nivelMasAlto);
-        if (botonNivel2 != null) botonNivel2.interactable = (2 <= nivelMasAlto);
-        if (botonNivel3 != null) botonNivel3.interactable = (3 <= nivelMasAlto);
+        for (int i = 0; i < botonesNivel.Count; i++)
+        {
+            if (botonesNivel[i] != null)
+            {
+                int levelNum = i + 1;
+                bool isLocked = levelNum > nivelMasAlto;
+                int stars = 0;
+                
+                if (AchievementManager.Instance != null)
+                {
+                    stars = AchievementManager.Instance.GetStarsForLevel(levelNum);
+                }
+                
+                botonesNivel[i].Setup(levelNum, stars, isLocked, starPrefab);
+            }
+        }
 
         if (panelSelectorNiveles != null) panelSelectorNiveles.SetActive(true);
         if (panelMenuPrincipal != null) panelMenuPrincipal.SetActive(false); 
@@ -156,6 +166,17 @@ public class MainMenu : MonoBehaviour
     public void CerrarSelectorNiveles()
     {
         if (panelSelectorNiveles != null) panelSelectorNiveles.SetActive(false);
-        if (panelMenuPrincipal != null) panelMenuPrincipal.SetActive(true); 
+        if (panelMenuPrincipal != null) panelMenuPrincipal.SetActive(true);
+    }
+    
+    void Update()
+    {
+        if (Keyboard.current != null && Keyboard.current.f12Key.wasPressedThisFrame)
+        {
+            PlayerPrefs.DeleteAll();
+            PlayerPrefs.Save();
+            Debug.LogWarning("PROGRESO BORRADO (PLAYERPREFS)");
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 }

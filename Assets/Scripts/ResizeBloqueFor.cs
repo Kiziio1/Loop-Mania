@@ -1,16 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections; 
+using System.Collections;
 
 [RequireComponent(typeof(RectTransform))]
-public class ResizeBloqueFor : MonoBehaviour
+public class ResizeBloqueFor: MonoBehaviour
 {
     public RectTransform headerContenedor;
-    public RectTransform contenidoContenedor; 
-
-    [Tooltip("Añade un valor aquí para darle más espacio vertical si es necesario.")]
-    public float ajusteVerticalExtra = 10f; 
-
+    public RectTransform contenidoContenedor;
+    public float ajusteVerticalExtra = 10f;
     private RectTransform miRectTransform;
 
     void Awake()
@@ -32,9 +29,9 @@ public class ResizeBloqueFor : MonoBehaviour
 
         var vlg = contenidoContenedor.GetComponent<VerticalLayoutGroup>();
         if (vlg == null) yield break;
-  
+
         float alturaContenido = vlg.padding.top + vlg.padding.bottom;
-        
+
         for (int i = 0; i < contenidoContenedor.childCount; i++)
         {
             var hijoRect = contenidoContenedor.GetChild(i).GetComponent<RectTransform>();
@@ -54,10 +51,18 @@ public class ResizeBloqueFor : MonoBehaviour
 
         if (transform.parent != null)
         {
-            PanelDinamico panelPadre = transform.parent.GetComponent<PanelDinamico>();
-            if (panelPadre != null)
+            ResizeBloqueFor resizerPadre = transform.parent.GetComponentInParent<ResizeBloqueFor>();
+            if (resizerPadre != null && resizerPadre != this)
             {
-                panelPadre.IniciarActualizacionAltura();
+                resizerPadre.IniciarActualizacionAltura();
+            }
+            else
+            {
+                PanelDinamico panelPadre = transform.parent.GetComponentInParent<PanelDinamico>();
+                if (panelPadre != null)
+                {
+                    panelPadre.IniciarActualizacionAltura();
+                }
             }
         }
     }

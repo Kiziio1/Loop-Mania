@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviour
 
         if (secuenciaDeNivel != null && secuenciaDeNivel.Count > 0)
         {
-            // Carga el nivel seleccionado en lugar de siempre [0]
+
             StartCoroutine(CargarNivelCoroutine(secuenciaDeNivel[nivelActualIndex]));
         }
     }
@@ -236,12 +236,8 @@ public class GameManager : MonoBehaviour
                 gano = true; 
             }
         }
-        
-        // Llama al LogManager con el resultado final del intento
+
         RegistrarIntentoLog(gano);
-        
-        // **AQUÍ ESTÁ EL CAMBIO**
-        // Si el intento fue exitoso, AHORA mostramos los resultados
         if (gano)
         {
             MostrarResultadosNivel();
@@ -265,16 +261,12 @@ public class GameManager : MonoBehaviour
         flechaEjecucion.transform.SetAsLastSibling();
         ultimoBloqueEjecutado = bloqueTransform;
 
-        // --- INICIO DEL AUTO-SCROLL (ARREGLADO) ---
         if (panelScrollRect != null)
         {
-            // **AQUÍ ESTÁ EL ARREGLO**
-            // Detiene la corutina anterior SI existe
             if (activeAutoScrollCoroutine != null)
             {
                 StopCoroutine(activeAutoScrollCoroutine);
             }
-            // Inicia la nueva corutina y GUARDA la referencia
             activeAutoScrollCoroutine = StartCoroutine(AutoScrollCoroutine(bloqueTransform.GetComponent<RectTransform>()));
         }
     }
@@ -298,7 +290,6 @@ public class GameManager : MonoBehaviour
 
     public void MostrarResultadosNivel()
     {
-        // ELIMINAMOS StopAllCoroutines(); 
         estaEjecutando = false; 
         OcultarFlecha();
 
@@ -354,7 +345,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Este método lo llamará el botón "Siguiente Nivel"
     public void BotonSiguienteNivelClick()
     {
         if (panelResultados != null)
@@ -366,58 +356,40 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator AutoScrollCoroutine(RectTransform targetBlock)
     {
-        // Actualiza el layout para tener las posiciones correctas
         Canvas.ForceUpdateCanvases();
 
-        // Altura total del contenido (panelPrograma)
         float contentHeight = panelPrograma.rect.height;
-        // Altura del área visible (el viewport)
         float viewportHeight = panelScrollRect.viewport.rect.height;
 
-        // Si el contenido cabe en la pantalla, no hay nada que scrollear
         if (contentHeight <= viewportHeight)
         {
             yield break;
         }
 
-        // --- Calcular la posición ---
-        // El 'anchoredPosition.y' de un bloque es negativo (ej. -500)
-        // Lo convertimos a un valor positivo (500)
         float blockYPos = Mathf.Abs(targetBlock.anchoredPosition.y);
 
-        // El punto máximo que el scroll puede alcanzar
         float maxScrollableY = contentHeight - viewportHeight;
 
-        // Queremos centrar el bloque en la pantalla.
-        // Calculamos dónde debe estar el borde superior del contenido.
-        // **AQUÍ ESTABA EL TYPO (decía 'blockY' en lugar de 'blockYPos')**
         float targetContentY = blockYPos - (viewportHeight / 2.0f);
 
-        // Aseguramos que no se pase de los límites (arriba o abajo)
         targetContentY = Mathf.Clamp(targetContentY, 0, maxScrollableY);
 
-        // Convertimos esa posición Y a un valor "normalizado" (0.0 = abajo, 1.0 = arriba)
         float targetNormalizedY = 1.0f - (targetContentY / maxScrollableY);
 
-        // --- Animar el scroll ---
-        float duration = 0.25f; // Duración de la animación (en segundos)
+        float duration = 0.25f; 
         float timer = 0;
         float startNormalizedY = panelScrollRect.verticalNormalizedPosition;
 
         while (timer < duration)
         {
             timer += Time.deltaTime;
-            // Interpola suavemente desde la posición actual a la objetivo
             float newNormalizedY = Mathf.Lerp(startNormalizedY, targetNormalizedY, timer / duration);
             panelScrollRect.verticalNormalizedPosition = newNormalizedY;
             yield return null;
         }
 
-        // Asegura que termine en la posición exacta
         panelScrollRect.verticalNormalizedPosition = targetNormalizedY;
     }
-    
-    // Reúne los datos y llama al LogManager
     private void RegistrarIntentoLog(bool ganoIntento)
     {
         if (LogManager.Instance == null) return; 
@@ -438,9 +410,6 @@ public class GameManager : MonoBehaviour
                 sbSecuencia.Append(comando.GetSequenceString()).Append(", ");
             }
         }
-
-        // **AQUÍ ESTÁ EL CAMBIO**
-        // Calculamos el tiempo transcurrido desde que se cargó el nivel
         float tiempo = Time.time - tiempoInicioNivel;
 
         LogManager.Instance.LogAttempt(

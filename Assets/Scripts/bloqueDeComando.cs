@@ -63,33 +63,30 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         }
     }
 
-    // **AQUÍ ESTÁ EL ARREGLO PARA EL PROBLEMA 1 (Parte B)**
-    // El método ahora recibe un GameManager en lugar de un float
     public IEnumerator Ejecutar(GameManager gameManager, PlayerController player)
     {
         switch (tipoDeComando)
         {
             case TipoComando.Avanzar:
-                gameManager.SetBloqueActual(this.transform); // Mueve la flecha aquí
+                gameManager.SetBloqueActual(this.transform); 
                 player.Avanzar();
                 yield return new WaitForSeconds(gameManager.sliderVelocidad.value);
-                
-                // Comprueba si el jugador murió DESPUÉS de avanzar
+
                 if (!player.estaVivo)
                 {
-                    gameManager.SetFlechaEstadoFallo(); // Pone la flecha roja
-                    yield break; // Detiene la ejecución
+                    gameManager.SetFlechaEstadoFallo(); 
+                    yield break; 
                 }
                 break;
                 
             case TipoComando.GirarDerecha:
-                gameManager.SetBloqueActual(this.transform); // Mueve la flecha aquí
+                gameManager.SetBloqueActual(this.transform); 
                 player.GirarDerecha();
                 yield return new WaitForSeconds(gameManager.sliderVelocidad.value);
                 break;
                 
             case TipoComando.GirarIzquierda:
-                gameManager.SetBloqueActual(this.transform); // Mueve la flecha aquí
+                gameManager.SetBloqueActual(this.transform); 
                 player.GirarIzquierda();
                 yield return new WaitForSeconds(gameManager.sliderVelocidad.value);
                 break;
@@ -105,8 +102,7 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                             if (comando != null)
                             {
                                 yield return StartCoroutine(comando.Ejecutar(gameManager, player));
-                                
-                                // Si el bloque de adentro mató al jugador, detiene el bucle
+
                                 if (!player.estaVivo) { yield break; }
                             }
                         }
@@ -125,8 +121,7 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                             if (comando != null)
                             {
                                 yield return StartCoroutine(comando.Ejecutar(gameManager, player));
-                                
-                                // Si el bloque de adentro mató al jugador, detiene el if
+
                                 if (!player.estaVivo) { yield break; }
                             }
                         }
@@ -142,9 +137,8 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         {
             GameObject clon = Instantiate(gameObject, transform.root);
             clon.transform.position = eventData.position;
-            
-            // **AQUÍ ESTÁ EL ARREGLO DE ORDEN**
-            clon.transform.SetAsLastSibling(); // Pone el clon encima de todo
+
+            clon.transform.SetAsLastSibling(); 
 
             BloqueDeComando clonScript = clon.GetComponent<BloqueDeComando>();
             clonScript.esOriginalDelBanco = false;
@@ -165,9 +159,8 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             }
         }
         transform.SetParent(transform.root);
-        
-        // **AQUÍ ESTÁ EL ARREGLO DE ORDEN**
-        transform.SetAsLastSibling(); // Pone el bloque que arrastras encima de todo
+
+        transform.SetAsLastSibling(); 
         
         transform.localScale = Vector3.one;
         canvasGroup.blocksRaycasts = false;
@@ -212,12 +205,10 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         }
     }
 
-    // Nuevo método para contar cuántos bloques "cuesta" este comando
     public int GetBlockCount()
     {
-        int count = 1; // El bloque en sí mismo cuenta como 1
+        int count = 1; 
 
-        // Si es un contenedor, suma los hijos
         if (tipoDeComando == TipoComando.BucleFor || tipoDeComando == TipoComando.CondicionalSi)
         {
             if (contenedorDeBloquesAnidados != null)
@@ -227,7 +218,7 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                     BloqueDeComando comando = bloqueAnidado.GetComponent<BloqueDeComando>();
                     if (comando != null)
                     {
-                        count += comando.GetBlockCount(); // Llamada recursiva
+                        count += comando.GetBlockCount(); 
                     }
                 }
             }
@@ -235,7 +226,6 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         return count;
     }
 
-    // Genera un string que representa este bloque y sus hijos
     public string GetSequenceString()
     {
         string sequence = "";
@@ -260,7 +250,6 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                         BloqueDeComando comando = bloqueAnidado.GetComponent<BloqueDeComando>();
                         if (comando != null)
                         {
-                            // Usa ; como separador para bloques anidados
                             sequence += comando.GetSequenceString() + "; ";
                         }
                     }
