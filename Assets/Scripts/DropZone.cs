@@ -6,8 +6,13 @@ public class DropZone : MonoBehaviour, IDropHandler
 
     public void OnDrop(PointerEventData eventData)
     {
-        GameObject bloqueArrastrado = eventData.pointerDrag;
+        BloqueDeComando bloquePadre = GetComponentInParent<BloqueDeComando>();
+        if (bloquePadre != null && bloquePadre.esOriginalDelBanco)
+        {
+            return;
+        }
 
+        GameObject bloqueArrastrado = eventData.pointerDrag;
         if (bloqueArrastrado != null)
         {
             bloqueArrastrado.transform.SetParent(this.transform);

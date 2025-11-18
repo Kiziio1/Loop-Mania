@@ -137,9 +137,7 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         {
             GameObject clon = Instantiate(gameObject, transform.root);
             clon.transform.position = eventData.position;
-
-            clon.transform.SetAsLastSibling(); 
-
+            clon.transform.SetAsLastSibling();
             BloqueDeComando clonScript = clon.GetComponent<BloqueDeComando>();
             clonScript.esOriginalDelBanco = false;
             clonScript.padreOriginal = this.transform.parent;
@@ -150,18 +148,26 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         }
 
         padreOriginal = transform.parent;
+
         if (padreOriginal != null)
         {
-            PanelDinamico panel = padreOriginal.GetComponent<PanelDinamico>();
-            if (panel != null)
+            ResizeBloqueFor resizerPadre = padreOriginal.GetComponentInParent<ResizeBloqueFor>();
+            if (resizerPadre != null)
             {
-                panel.IniciarActualizacionAltura();
+                resizerPadre.IniciarActualizacionAltura();
+            }
+            else
+            {
+                PanelDinamico panelDinamicoPadre = padreOriginal.GetComponentInParent<PanelDinamico>();
+                if (panelDinamicoPadre != null)
+                {
+                    panelDinamicoPadre.IniciarActualizacionAltura();
+                }
             }
         }
-        transform.SetParent(transform.root);
 
-        transform.SetAsLastSibling(); 
-        
+        transform.SetParent(transform.root);
+        transform.SetAsLastSibling();
         transform.localScale = Vector3.one;
         canvasGroup.blocksRaycasts = false;
         canvasGroup.alpha = 0.6f;
@@ -177,26 +183,56 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (esOriginalDelBanco) return;
+    if (esOriginalDelBanco) return;
 
-        canvasGroup.alpha = 1f;
+    canvasGroup.alpha = 1f;
+    canvasGroup.blocksRaycasts = true;
+
         if (transform.parent == transform.root)
         {
-            transform.SetParent(padreOriginal);
+            if (padreOriginal != null && padreOriginal.CompareTag("BancoDeHechizos"))
+            {
+                Destroy(gameObject);
+            }
+            else if (padreOriginal != null)
+            {
+                transform.SetParent(padreOriginal);
+                ResizeBloqueFor resizer = padreOriginal.GetComponentInParent<ResizeBloqueFor>();
+
+                if (resizer != null)
+                {
+                    resizer.IniciarActualizacionAltura();
+                }
+                else
+                {
+                    PanelDinamico panelDinamico = padreOriginal.GetComponentInParent<PanelDinamico>();
+                    if (panelDinamico != null)
+                    {
+                        panelDinamico.IniciarActualizacionAltura();
+                    }
+                }
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
-        transform.localScale = Vector3.one;
-        canvasGroup.blocksRaycasts = true;
+        else
+        {
+            transform.localScale = Vector3.one;
+        }
     }
 
     public void OnDrop(PointerEventData eventData)
     {
+        if (esOriginalDelBanco) return;
+
         if (tipoDeComando != TipoComando.BucleFor && tipoDeComando != TipoComando.CondicionalSi) return;
 
         GameObject bloqueArrastrado = eventData.pointerDrag;
         if (bloqueArrastrado != null)
         {
             bloqueArrastrado.transform.SetParent(contenedorDeBloquesAnidados);
-
             ResizeBloqueFor resizer = GetComponent<ResizeBloqueFor>();
             if (resizer != null)
             {

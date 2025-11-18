@@ -7,6 +7,7 @@ TagManager:
   - Goal
   - Hazard
   - Obstaculo
+  - BancoDeHechizos
   layers:
   - Default
   - TransparentFX

@@ -12,24 +12,37 @@ public class PlayerController : MonoBehaviour
     public bool estaVivo { get; private set; } = true; 
     public bool estaEnLaMeta { get; private set; } = false;
     private Vector2Int direccionActual = Vector2Int.right; 
+    [Header("Sonido de Acciones")]
+    public AudioClip[] sonidosDeAccionBasica;
+    private AudioSource audioSource;
 
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        audioSource = GetComponent<AudioSource>();
         ActualizarSprite();
         estaVivo = true; 
         estaEnLaMeta = false; 
     }
     public void Avanzar()
     {
-        if (juegoTerminado) return;
-        transform.position += (Vector3)(Vector2)direccionActual;
+    if (juegoTerminado) return;
+
+    TocarSonidoDeAccion();
+    if (HayMuroEnfrente())
+    {
+        Debug.Log("Player intentó avanzar pero un obstáculo bloquea el paso.");
+        return;
+    }
+
+    transform.position += (Vector3)(Vector2)direccionActual;
         Debug.Log("Player avanzó en dirección " + direccionActual + ". Nueva posición: " + transform.position);
     }
 
     public void GirarDerecha()
     {
         if (juegoTerminado) return;
+        TocarSonidoDeAccion();
         if (direccionActual == Vector2Int.right) direccionActual = Vector2Int.down;
         else if (direccionActual == Vector2Int.down) direccionActual = Vector2Int.left;
         else if (direccionActual == Vector2Int.left) direccionActual = Vector2Int.up;
@@ -42,6 +55,7 @@ public class PlayerController : MonoBehaviour
     public void GirarIzquierda()
     {
         if (juegoTerminado) return;
+        TocarSonidoDeAccion();
         if (direccionActual == Vector2Int.right) direccionActual = Vector2Int.up;
         else if (direccionActual == Vector2Int.up) direccionActual = Vector2Int.left;
         else if (direccionActual == Vector2Int.left) direccionActual = Vector2Int.down;
@@ -100,21 +114,13 @@ public class PlayerController : MonoBehaviour
     {
         if (juegoTerminado) return;
 
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.sortingOrder = Mathf.RoundToInt(transform.position.y * -10f);
+        }
+
         var teclado = Keyboard.current;
         if (teclado == null) return;
-
-        if (teclado.dKey.wasPressedThisFrame)
-        {
-            Avanzar();
-        }
-        if (teclado.eKey.wasPressedThisFrame)
-        {
-            GirarDerecha();
-        }
-        if (teclado.qKey.wasPressedThisFrame)
-        {
-            GirarIzquierda();
-        }
     }
 
     public bool HayObstaculoEnfrente()
@@ -136,6 +142,23 @@ public class PlayerController : MonoBehaviour
 
         return false;
     }
+
+    private bool HayMuroEnfrente()
+    {
+        Vector2 direccionActualFloat = (Vector2)direccionActual;
+        Vector2 puntoDelInicio = (Vector2)transform.position + (direccionActualFloat * 0.2f);
+        float distanciaDelRayo = 0.8f;
+
+        RaycastHit2D hit = Physics2D.Raycast(puntoDelInicio, direccionActualFloat, distanciaDelRayo);
+
+        if (hit.collider != null && hit.collider.CompareTag("Obstaculo"))
+        {
+            Debug.DrawRay(puntoDelInicio, direccionActualFloat * distanciaDelRayo, Color.red);
+            Debug.Log("¡Muro detectado: " + hit.collider.name + "!");
+            return true;
+        }
+        return false;
+    }
     
     public void ForzarFallo()
     {
@@ -147,5 +170,17 @@ public class PlayerController : MonoBehaviour
         this.enabled = false;
         GetComponent<SpriteRenderer>().color = Color.gray;
     }
-    
+
+    private void TocarSonidoDeAccion()
+{
+    if (sonidosDeAccionBasica == null || sonidosDeAccionBasica.Length == 0 || audioSource == null)
+    {
+        return;
+    }
+    int index = Random.Range(0, sonidosDeAccionBasica.Length);
+
+    AudioClip clipATocar = sonidosDeAccionBasica[index];
+
+    audioSource.PlayOneShot(clipATocar);
+}
 }

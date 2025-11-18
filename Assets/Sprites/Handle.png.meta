@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 99560b07fb068ca4190dc6c5fe39b068
+guid: 027983b3130c44b4fa8f87a845214619
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8773050765438197630
-    second: pixelated-golden-star-icon_53876-1158948_0
+      213: 7930265040436356065
+    second: Handle_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pixelated-golden-star-icon_53876-1158948_0
+      name: Handle_0
       rect:
         serializedVersion: 2
-        x: 95
-        y: 112
-        width: 552
-        height: 515
+        x: 2
+        y: 6
+        width: 46
+        height: 73
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 28066997fccdf3680800000000000000
-      internalID: -8773050765438197630
+      spriteID: 1e368e5b906fd0e60800000000000000
+      internalID: 7930265040436356065
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pixelated-golden-star-icon_53876-1158948_0: -8773050765438197630
+      Handle_0: 7930265040436356065
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

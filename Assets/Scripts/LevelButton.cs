@@ -45,6 +45,6 @@ public class LevelButton : MonoBehaviour
     public void CargarNivel()
     {
         AchievementManager.NivelACargar = nivelIndex;
-        SceneManager.LoadScene("GameLoop");
+        TransitionManager.Instance.LoadSceneWithFade("GameLoop");
     }
 }

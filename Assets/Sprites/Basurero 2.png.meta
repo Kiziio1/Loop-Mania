@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 605b9c034e2ab9c489b0449ae8355825
+guid: 36b45a9772706524c98803c883de2428
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1734998653893642107
-    second: 2839122_0
+      213: 4519847886757475614
+    second: Basurero 2_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 2839122_0
+      name: Basurero 2_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1024
-        height: 1024
+        width: 106
+        height: 101
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b778c135514f31810800000000000000
-      internalID: 1734998653893642107
+      spriteID: e15baf0b4b9b9be30800000000000000
+      internalID: 4519847886757475614
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      2839122_0: 1734998653893642107
+      Basurero 2_0: 4519847886757475614
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
