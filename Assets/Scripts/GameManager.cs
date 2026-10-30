@@ -8,6 +8,8 @@ using System.Text;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance; 
+
     public RectTransform panelPrograma;
     public GameObject panelHechizos;
     public CanvasGroup hudCanvasGroup;
@@ -49,35 +51,66 @@ public class GameManager : MonoBehaviour
     private Coroutine activeAutoScrollCoroutine;
     private float tiempoInicioNivel;
 
-    [Header("Tutorial Secuencial")]
+    // =================================================================================
+    // SISTEMA DE TUTORIALES (HÍBRIDO)
+    // =================================================================================
+    [Header("Tutorial UI General")]
     public GameObject panelTutorialMaestro;
+    public GameObject imagenAvatarBruja;
     public TextMeshProUGUI textoTutorial;
-    public Button botonTutorialSiguiente;
-    private List<string> tutorialActivo;
-    private int pasoTutorialActual;
-    private List<string> tutorialNivel1 = new List<string> {
-        "Ya veo que lograste entrar a la torre sin mayores problemas, no pierdas el tiempo.",
-        "No puedo arriesgarme a que falles ahora, así que te hare un pequeño repaso de lo basico.",
-        "Cuentas con un grimorio magico, el cual te permite realizar hechizos.",
-        "A tu izquierda está tu Grimorio. A la derecha, tu Página de Hechizos.",
-        "Pulsa (TAB) para abrir y cerrar tu Página de Hechizos. Allí encontrarás tus hechizos básicos y un Sello de Anulación (X) para borrar.",
-        "Arrastra hechizos de la Página al Grimorio para construir tu secuencia.",
-        "Pulsa (Espacio) o el boton reproducir para ejecutar tu magia. El Slider de abajo controla la velocidad a la que se realizn los hechizos.",
-        "Si fallas o si lo deseas, pulsa (R) para reiniciar el nivel, puedes oprimir (T) para hacer un reinicio que mantenga los hechizos que haz usado. Ahora, alcanza la meta."
-    };
+    public Button botonTutorialSiguiente; 
+
+    // --- Estructuras para el NUEVO tutorial interactivo (Nivel 1) ---
+    [System.Serializable]
+    public struct PasoTutorialData
+    {
+        [TextArea(2,3)] public string textoKael; 
+        public RectTransform objetoAResaltar;    
+        public TipoAccionTutorial accionRequerida; 
+        
+        [Header("Opciones Especiales")]
+        public bool resaltarSoloUnSegundo; 
+        public bool ocultarTextoParaAccion; 
+    }
+
+    public enum TipoAccionTutorial
+    {
+        ClickParaAvanzar, 
+        PresionarTab,     
+        ArrastrarHechizos, 
+        Ejecutar,         
+        FalloForzado,      
+        PresionarT,
+        Nada               
+    }
+
+    [Header("Nuevo Sistema Tutorial (Nivel 1)")]
+    public GameObject panelOscuroTutorial; 
+    public List<PasoTutorialData> tutorialNivel1_Pasos; 
+    private int pasoInteractivoIndex = 0;
+    private int pasoGuardadoParaReinicio = -1; 
+    private PasoTutorialData pasoActualData;
+    private Canvas canvasResaltadoActual; 
+    private bool esTutorialInteractivo = false; 
+    private bool esperandoInicioAccion = false; 
+
+    // --- Listas para el VIEJO tutorial (Nivel 6 y 11) ---
+    private List<string> tutorialActivoTexto; 
+    private int pasoTextoIndex;
+    
     private List<string> tutorialNivel6 = new List<string> {
-    "¡Buen trabajo! Veo que dominas lo básico.",
-    "Ahora te enseñaré un hechizo más poderoso: el Bucle For.",
-    "Este hechizo te permite repetir una secuencia de hechizos varias veces.",
-    "Arrastra los hechizos que quieras repetir *dentro* del bloque BucleFor.",
-    "Úsalo sabiamente para ahorrar hechizos."
+        "¡Buen trabajo! Veo que dominas lo básico.",
+        "Ahora te enseñaré un hechizo más poderoso: el Bucle For.",
+        "Este hechizo te permite repetir una secuencia de hechizos varias veces.",
+        "Arrastra los hechizos que quieras repetir *dentro* del bloque BucleFor.",
+        "Úsalo sabiamente para ahorrar hechizos."
     };
     private List<string> tutorialNivel11 = new List<string> {
-    "Impresionante. Has llegado lejos.",
-    "Es hora del último hechizo: el Condicional If.",
-    "Este hechizo observa si hay un obstáculo enfrente. Si lo hay, ejecutará los hechizos que tenga dentro.",
-    "Si no hay obstáculo, simplemente no hara nada.",
-    "Esto puedes combinarlo con todos los anteriores y crear combinaciones, las necesitaras para los niveles que se aproximan. Buena suerte."
+        "Impresionante. Has llegado lejos.",
+        "Es hora del último hechizo: el Condicional If.",
+        "Este hechizo observa si hay un obstáculo enfrente. Si lo hay, ejecutará los hechizos que tenga dentro.",
+        "Si no hay obstáculo, simplemente no hara nada.",
+        "Esto puedes combinarlo con todos los anteriores y crear combinaciones."
     };
     
     [Header("Audio de Nivel")]
@@ -86,13 +119,18 @@ public class GameManager : MonoBehaviour
     public AudioClip musicaVictoria;
     private AudioSource audioSource;
 
+    void Awake()
+    {
+        if (Instance != null && Instance != this) Destroy(this);
+        else Instance = this;
+    }
+
     [System.Obsolete]
     void Start()
     {
-        if (panelHechizos != null)
-        {
-            panelHechizos.SetActive(false);
-        }
+        if (panelHechizos != null) panelHechizos.SetActive(false);
+
+        if (panelOscuroTutorial != null) panelOscuroTutorial.SetActive(false);
 
         if (flechaEjecucion != null)
         {
@@ -100,17 +138,10 @@ public class GameManager : MonoBehaviour
             OcultarFlecha();
         }
 
-        if (panelResultados != null)
-        {
-            panelResultados.SetActive(false);
-        }
+        if (panelResultados != null) panelResultados.SetActive(false);
 
         audioSource = GetComponent<AudioSource>();
-        
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
         nivelActualIndex = AchievementManager.NivelACargar - 1;
 
@@ -123,7 +154,11 @@ public class GameManager : MonoBehaviour
 
         panelTutorialMaestro.SetActive(false);
 
-        if (botonTutorialSiguiente != null) botonTutorialSiguiente.onClick.AddListener(MostrarSiguientePasoTutorial);
+        if (botonTutorialSiguiente != null) 
+        {
+            botonTutorialSiguiente.onClick.RemoveAllListeners();
+            botonTutorialSiguiente.onClick.AddListener(ClickBotonTutorial);
+        }
         
         if (secuenciaDeNivel != null && secuenciaDeNivel.Count > 0)
         {
@@ -136,46 +171,90 @@ public class GameManager : MonoBehaviour
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
-        if (keyboard.escapeKey.wasPressedThisFrame)
+        // TUTORIAL INTERACTIVO
+        if (esTutorialInteractivo)
         {
-            if (TransitionManager.Instance != null)
+            if (esperandoInicioAccion) return;
+
+            if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                TransitionManager.Instance.LoadSceneWithFade("MainMenu");
+                 if (TransitionManager.Instance != null) TransitionManager.Instance.LoadSceneWithFade("MainMenu");
+            }
+
+            switch (pasoActualData.accionRequerida)
+            {
+                case TipoAccionTutorial.PresionarTab:
+                    if (keyboard.tabKey.wasPressedThisFrame)
+                    {
+                        if (panelHechizos != null) panelHechizos.SetActive(!panelHechizos.activeSelf);
+                        AvanzarPasoInteractivo();
+                    }
+                    return; 
+
+                case TipoAccionTutorial.PresionarT:
+                    if (keyboard.tKey.wasPressedThisFrame)
+                    {
+                        pasoGuardadoParaReinicio = pasoInteractivoIndex + 1;
+
+                        ReiniciarIntento();
+
+                    }
+                    return;
+
+                case TipoAccionTutorial.Ejecutar:
+                    if (keyboard.spaceKey.wasPressedThisFrame && !estaEjecutando)
+                    {
+                         EjecutarPrograma();
+                    }
+                    return;
+
+                case TipoAccionTutorial.ArrastrarHechizos:
+                    if (keyboard.spaceKey.wasPressedThisFrame) return;
+
+                    if (GetBloquesColocadosCount() >= 3) 
+                    {
+                        AvanzarPasoInteractivo();
+                    }
+                    return; 
+                
+                case TipoAccionTutorial.ClickParaAvanzar:
+                    break;
+
+                default:
+                    if (pasoActualData.accionRequerida == TipoAccionTutorial.FalloForzado) return;
+                    break;
             }
         }
 
-        if (keyboard.spaceKey.wasPressedThisFrame)
+        // INPUTS NORMALES (Juego estándar)
+        if (!esTutorialInteractivo)
         {
-            EjecutarPrograma();
-        }
-
-        if (keyboard.tKey.wasPressedThisFrame)
-        {
-            ReiniciarIntento();
-        }
-
-        if (keyboard.rKey.wasPressedThisFrame)
-        {
-            ReiniciarNivelActual();
-        }
-        
-        if (keyboard.tabKey.wasPressedThisFrame)
-        {
-            if (panelHechizos != null && !estaEjecutando)
+            if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                panelHechizos.SetActive(!panelHechizos.activeSelf);
+                if (TransitionManager.Instance != null) TransitionManager.Instance.LoadSceneWithFade("MainMenu");
             }
-        }
-        
-        if (keyboard.hKey.wasPressedThisFrame)
-        {
-            hudTransparente = !hudTransparente;
-            if (hudCanvasGroup != null)
+
+            if (keyboard.spaceKey.wasPressedThisFrame) EjecutarPrograma();
+            if (keyboard.tKey.wasPressedThisFrame) ReiniciarIntento();
+            if (keyboard.rKey.wasPressedThisFrame) ReiniciarNivelActual();
+            
+            if (keyboard.tabKey.wasPressedThisFrame)
             {
-                hudCanvasGroup.alpha = hudTransparente ? 0.4f : 1.0f;
+                if (panelHechizos != null && !estaEjecutando)
+                {
+                    panelHechizos.SetActive(!panelHechizos.activeSelf);
+                }
+            }
+            
+            if (keyboard.hKey.wasPressedThisFrame)
+            {
+                hudTransparente = !hudTransparente;
+                if (hudCanvasGroup != null) hudCanvasGroup.alpha = hudTransparente ? 0.4f : 1.0f;
             }
         }
     }
+
+    // --- Métodos Públicos para UI y Lógica ---
 
     public void ReiniciarNivelActual()
     {
@@ -192,16 +271,14 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("¡FELICIDADES! ¡HAS COMPLETADO TODOS LOS NIVELES!");
+            TransitionManager.Instance.LoadSceneWithFade("MainMenu");
         }
     }
 
     public void ReiniciarIntento()
     {
         StopAllCoroutines();
-        if (panelResultados != null)
-        {
-            panelResultados.SetActive(false);
-        }
+        if (panelResultados != null) panelResultados.SetActive(false);
 
         if (nivelActualIndex < secuenciaDeNivel.Count)
         {
@@ -209,31 +286,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // --- Corrutina de Carga (Modificada para detectar tutoriales) ---
+
     private IEnumerator CargarNivelCoroutine(LevelData nivelACargar, bool limpiarPanel = true)
     {
         estaEjecutando = false;
         activeAutoScrollCoroutine = null;
 
-        if (playerController != null)
-        {
-            Destroy(playerController.gameObject);
-        }
-
-        if (contenedorMapa != null)
-        {
-            Destroy(contenedorMapa.gameObject);
-        }
-
+        if (playerController != null) Destroy(playerController.gameObject);
+        if (contenedorMapa != null) Destroy(contenedorMapa.gameObject);
         if (limpiarPanel && panelPrograma != null)
         {
-            foreach (Transform bloque in panelPrograma)
-            {
-                Destroy(bloque.gameObject);
-            }
+            foreach (Transform bloque in panelPrograma) Destroy(bloque.gameObject);
         }
 
-        if (botonBucleFor != null) { botonBucleFor.SetActive(nivelACargar.permitirBucleFor); }
-        if (botonCondicionalIf != null) { botonCondicionalIf.SetActive(nivelACargar.permitirCondicionalIf); }
+        if (botonBucleFor != null) botonBucleFor.SetActive(nivelACargar.permitirBucleFor);
+        if (botonCondicionalIf != null) botonCondicionalIf.SetActive(nivelACargar.permitirCondicionalIf);
 
         if (audioSource != null && musicaPensando != null)
         {
@@ -243,23 +311,38 @@ public class GameManager : MonoBehaviour
             audioSource.Play();
         }
 
+        // --- SISTEMA DE TUTORIAL: SELECCIÓN ---
+        esTutorialInteractivo = false; // Reset
+        
         if (panelTutorialMaestro != null)
         {
+            // NIVEL 1: NUEVO SISTEMA INTERACTIVO
             if (nivelActualIndex == 0 && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.TUTORIAL_1_VISTO))
             {
-                IniciarTutorial(tutorialNivel1);
+                if (pasoGuardadoParaReinicio != -1)
+                {
+                    IniciarTutorialInteractivo(pasoGuardadoParaReinicio);
+                    pasoGuardadoParaReinicio = -1; // 
+                }
+                else
+                {
+                    IniciarTutorialInteractivo(0);
+                }
             }
+            // NIVEL 6: SISTEMA VIEJO (TEXTO)
             else if (nivelActualIndex == 5 && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.TUTORIAL_6_VISTO))
             {
-                IniciarTutorial(tutorialNivel6);
+                IniciarTutorialTexto(tutorialNivel6);
             }
+            // NIVEL 11: SISTEMA VIEJO (TEXTO)
             else if (nivelActualIndex == 10 && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.TUTORIAL_11_VISTO))
             {
-                IniciarTutorial(tutorialNivel11);
+                IniciarTutorialTexto(tutorialNivel11);
             }
             else
             {
                 panelTutorialMaestro.SetActive(false);
+                if (panelOscuroTutorial != null) panelOscuroTutorial.SetActive(false);
             }
         }
 
@@ -294,10 +377,7 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("Cargado Nivel: " + nivelACargar.nombreNivel);
 
-        if (sliderVelocidad != null)
-        {
-            sliderVelocidad.value = 0.5f;
-        }
+        if (sliderVelocidad != null) sliderVelocidad.value = 0.5f;
 
         OcultarFlecha();
         tiempoInicioNivel = Time.time;
@@ -305,22 +385,9 @@ public class GameManager : MonoBehaviour
 
     public void EjecutarPrograma()
     {
-        if (panelHechizos != null && panelHechizos.activeSelf)
-        {
-            panelHechizos.SetActive(false);
-        }
-
-        if (estaEjecutando)
-        {
-            Debug.Log("Ya hay una ejecución en curso.");
-            return;
-        }
-
-        if (playerController == null || !playerController.estaVivo)
-        {
-            Debug.Log("No se puede ejecutar: el jugador no está listo o ya ha perdido.");
-            return;
-        }
+        if (panelHechizos != null && panelHechizos.activeSelf) panelHechizos.SetActive(false);
+        if (estaEjecutando) return;
+        if (playerController == null || !playerController.estaVivo) return;
 
         if (audioSource != null && musicaEjecutando != null)
         {
@@ -372,6 +439,16 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        // --- INTERVENCION TUTORIAL INTERACTIVO ---
+        if (esTutorialInteractivo)
+        {
+            if (pasoActualData.accionRequerida == TipoAccionTutorial.Ejecutar && !gano)
+            {
+                yield return new WaitForSeconds(1f);
+                AvanzarPasoInteractivo();
+            }
+        }
+
         RegistrarIntentoLog(gano);
 
         if (gano)
@@ -381,12 +458,189 @@ public class GameManager : MonoBehaviour
         else if (audioSource != null && musicaPensando != null)
         {
             audioSource.Stop();
-            
         }
 
         estaEjecutando = false;
         activeAutoScrollCoroutine = null;
     }
+
+    // =================================================================================
+    // MÉTODOS DEL NUEVO SISTEMA DE TUTORIAL (INTERACTIVO)
+    // =================================================================================
+    
+    private void IniciarTutorialInteractivo(int pasoInicial = 0)
+    {
+        if (tutorialNivel1_Pasos == null || tutorialNivel1_Pasos.Count == 0) return;
+
+        esTutorialInteractivo = true;
+        pasoInteractivoIndex = pasoInicial; 
+        
+        panelTutorialMaestro.SetActive(true);
+        panelOscuroTutorial.SetActive(true); 
+        textoTutorial.gameObject.SetActive(true);
+        
+        ProcesarPasoInteractivo();
+    }
+
+    private void ProcesarPasoInteractivo()
+    {
+        if (pasoInteractivoIndex >= tutorialNivel1_Pasos.Count)
+        {
+            FinalizarTutorialInteractivo();
+            return;
+        }
+
+        pasoActualData = tutorialNivel1_Pasos[pasoInteractivoIndex];
+        esperandoInicioAccion = false; 
+
+        panelTutorialMaestro.SetActive(true);
+        textoTutorial.text = pasoActualData.textoKael;
+
+        if (pasoActualData.ocultarTextoParaAccion)
+        {
+            esperandoInicioAccion = true;
+            ResaltarObjeto(null); 
+            if (imagenAvatarBruja != null) imagenAvatarBruja.SetActive(true); 
+        }
+        else
+        {
+            ResaltarObjeto(pasoActualData.objetoAResaltar);
+            
+            if (imagenAvatarBruja != null)
+            {
+                bool hayResaltado = pasoActualData.objetoAResaltar != null;
+                imagenAvatarBruja.SetActive(!hayResaltado);
+            }
+
+            if (pasoActualData.resaltarSoloUnSegundo && pasoActualData.objetoAResaltar != null)
+            {
+                StartCoroutine(RutinaResaltarTemporal());
+            }
+        }
+
+        if (botonTutorialSiguiente != null)
+        {
+            bool interactuable = (pasoActualData.accionRequerida == TipoAccionTutorial.ClickParaAvanzar) 
+                                 || esperandoInicioAccion;
+            
+            botonTutorialSiguiente.interactable = interactuable;
+            botonTutorialSiguiente.GetComponent<Image>().raycastTarget = interactuable;
+        }
+    }
+
+    private void AvanzarPasoInteractivo()
+    {
+        pasoInteractivoIndex++;
+        ProcesarPasoInteractivo();
+    }
+
+    private void FinalizarTutorialInteractivo()
+    {
+        esTutorialInteractivo = false;
+        panelTutorialMaestro.SetActive(false);
+        panelOscuroTutorial.SetActive(false);
+        ResaltarObjeto(null); 
+        AchievementManager.Instance.UnlockAchievement(AchievementManager.TUTORIAL_1_VISTO);
+    }
+
+    private void ResaltarObjeto(RectTransform objetivo)
+    {
+        if (canvasResaltadoActual != null)
+        {
+            GraphicRaycaster gr = canvasResaltadoActual.GetComponent<GraphicRaycaster>();
+            if (gr != null) Destroy(gr);
+
+            Destroy(canvasResaltadoActual);
+            canvasResaltadoActual = null;
+        }
+
+        if (objetivo == null) return;
+
+        Canvas c = objetivo.gameObject.GetComponent<Canvas>();
+        if (c == null) c = objetivo.gameObject.AddComponent<Canvas>();
+        
+        c.overrideSorting = true;
+        c.sortingOrder = 30; 
+
+        if (objetivo.gameObject.GetComponent<GraphicRaycaster>() == null)
+        {
+            objetivo.gameObject.AddComponent<GraphicRaycaster>();
+        }
+
+        canvasResaltadoActual = c;
+    }
+
+    public bool EstaEnTutorial()
+    {
+        return esTutorialInteractivo;
+    }
+    
+    public bool PasoActualRequiereAvanzar()
+    {
+        return esTutorialInteractivo && pasoActualData.accionRequerida == TipoAccionTutorial.ArrastrarHechizos;
+    }
+
+    // =================================================================================
+    // MÉTODOS DEL VIEJO SISTEMA DE TUTORIAL (SOLO TEXTO - NIVEL 6 y 11)
+    // =================================================================================
+
+    private void IniciarTutorialTexto(List<string> pasos)
+    {
+        esTutorialInteractivo = false;
+        panelTutorialMaestro.SetActive(true);
+        textoTutorial.gameObject.SetActive(true);
+        if (panelOscuroTutorial != null) panelOscuroTutorial.SetActive(false); // Sin oscuridad
+        
+        tutorialActivoTexto = pasos;
+        pasoTextoIndex = 0;
+        MostrarSiguientePasoTexto();
+    }
+
+    public void MostrarSiguientePasoTexto()
+    {
+        if (pasoTextoIndex >= tutorialActivoTexto.Count)
+        {
+            panelTutorialMaestro.SetActive(false);
+            if (nivelActualIndex == 5) AchievementManager.Instance.UnlockAchievement(AchievementManager.TUTORIAL_6_VISTO);
+            if (nivelActualIndex == 10) AchievementManager.Instance.UnlockAchievement(AchievementManager.TUTORIAL_11_VISTO);
+            return;
+        }
+
+        textoTutorial.text = tutorialActivoTexto[pasoTextoIndex];
+        pasoTextoIndex++;
+        
+        if (botonTutorialSiguiente != null) botonTutorialSiguiente.interactable = true;
+    }
+
+    public void ClickBotonTutorial()
+    {
+        if (esTutorialInteractivo)
+        {
+            if (esperandoInicioAccion)
+            {
+                panelTutorialMaestro.SetActive(false);
+
+                ResaltarObjeto(pasoActualData.objetoAResaltar);
+
+                esperandoInicioAccion = false;
+                
+                return;
+            }
+
+            if (pasoActualData.accionRequerida == TipoAccionTutorial.ClickParaAvanzar)
+            {
+                AvanzarPasoInteractivo();
+            }
+        }
+        else
+        {
+            MostrarSiguientePasoTexto();
+        }
+    }
+
+    // =================================================================================
+    // RESTO DE MÉTODOS UI Y VISUALES
+    // =================================================================================
 
     public void SetBloqueActual(Transform bloqueTransform)
     {
@@ -407,10 +661,7 @@ public class GameManager : MonoBehaviour
 
         bool isVisible = (blockTopY < viewportTopY) && (blockBottomY > viewportBottomY);
 
-        if (!isVisible)
-        {
-            flechaEjecucion.gameObject.SetActive(false);
-        }
+        if (!isVisible) flechaEjecucion.gameObject.SetActive(false);
         else
         {
             flechaEjecucion.gameObject.SetActive(true);
@@ -426,17 +677,14 @@ public class GameManager : MonoBehaviour
 
         if (panelScrollRect != null)
         {
-            if (activeAutoScrollCoroutine != null)
-            {
-                StopCoroutine(activeAutoScrollCoroutine);
-            }
+            if (activeAutoScrollCoroutine != null) StopCoroutine(activeAutoScrollCoroutine);
             activeAutoScrollCoroutine = StartCoroutine(AutoScrollCoroutine(blockRect));
         }
     }
+
     public void OcultarFlecha()
     {
         if (flechaEjecucion == null) return;
-
         flechaEjecucion.gameObject.SetActive(false);
         flechaEjecucion.color = colorOriginalFlecha; 
         ultimoBloqueEjecutado = null;
@@ -445,9 +693,7 @@ public class GameManager : MonoBehaviour
     public void SetFlechaEstadoFallo()
     {
         if (flechaEjecucion == null || ultimoBloqueEjecutado == null) return;
-
         SetBloqueActual(ultimoBloqueEjecutado);
-
         flechaEjecucion.color = Color.red;
     }
 
@@ -455,6 +701,11 @@ public class GameManager : MonoBehaviour
     {
         estaEjecutando = false;
         OcultarFlecha();
+
+        if (esTutorialInteractivo)
+        {
+            FinalizarTutorialInteractivo();
+        }
 
         if (audioSource != null && musicaVictoria != null)
         {
@@ -467,7 +718,6 @@ public class GameManager : MonoBehaviour
         LevelData nivelActual = secuenciaDeNivel[nivelActualIndex];
         int optimo = nivelActual.movimientosOptimos;
         int movimientosJugador = 0;
-
         bool usoBucleFor = false;
         bool usoCondicionalSi = false;
 
@@ -477,39 +727,18 @@ public class GameManager : MonoBehaviour
             if (comando != null)
             {
                 movimientosJugador += comando.GetBlockCount();
-                
-                if (comando.tipoDeComando == BloqueDeComando.TipoComando.BucleFor)
-                {
-                    usoBucleFor = true;
-                }
-                if (comando.tipoDeComando == BloqueDeComando.TipoComando.CondicionalSi)
-                {
-                    usoCondicionalSi = true;
-                }
+                if (comando.tipoDeComando == BloqueDeComando.TipoComando.BucleFor) usoBucleFor = true;
+                if (comando.tipoDeComando == BloqueDeComando.TipoComando.CondicionalSi) usoCondicionalSi = true;
             }
         }
 
-        int limite3Estrellas = optimo;
-        int limite2Estrellas = Mathf.CeilToInt(optimo + (optimo * 0.25f) + 3);
-        int estrellasGanadas = 0;
+        int estrellasGanadas;
+        if (movimientosJugador <= optimo) estrellasGanadas = 3;
+        else if (movimientosJugador <= Mathf.CeilToInt(optimo + (optimo * 0.25f) + 3)) estrellasGanadas = 2;
+        else estrellasGanadas = 1;
 
-        if (movimientosJugador <= limite3Estrellas)
-        {
-            estrellasGanadas = 3;
-        }
-        else if (movimientosJugador <= limite2Estrellas)
-        {
-            estrellasGanadas = 2;
-        }
-        else
-        {
-            estrellasGanadas = 1;
-        }
-
-        if (textoMovimientosJugador != null)
-            textoMovimientosJugador.text = "Tus Movimientos: " + movimientosJugador;
-        if (textoMovimientosOptimos != null)
-            textoMovimientosOptimos.text = "Óptimo: " + optimo;
+        if (textoMovimientosJugador != null) textoMovimientosJugador.text = "Tus Movimientos: " + movimientosJugador;
+        if (textoMovimientosOptimos != null) textoMovimientosOptimos.text = "Óptimo: " + optimo;
 
         if (estrella1 != null) estrella1.SetActive(estrellasGanadas >= 1);
         if (estrella2 != null) estrella2.SetActive(estrellasGanadas >= 2);
@@ -518,27 +747,18 @@ public class GameManager : MonoBehaviour
         if (AchievementManager.Instance != null)
         {
             AchievementManager.Instance.SetStarsForLevel(nivelActualIndex + 1, estrellasGanadas);
-            int nivelDesbloqueado = nivelActualIndex + 2;
-            AchievementManager.Instance.SetHighestLevel(nivelDesbloqueado);
-            
+            AchievementManager.Instance.SetHighestLevel(nivelActualIndex + 2);
             CheckearLogros(nivelActualIndex + 1, estrellasGanadas, usoBucleFor, usoCondicionalSi);
         }
 
-        if (panelResultados != null)
-        {
-            panelResultados.SetActive(true);
-        }
+        if (panelResultados != null) panelResultados.SetActive(true);
     }
 
     public void BotonSiguienteNivelClick()
     {
-        if (panelResultados != null)
-        {
-            panelResultados.SetActive(false);
-        }
+        if (panelResultados != null) panelResultados.SetActive(false);
 
         nivelActualIndex++; 
-        
         if (nivelActualIndex < secuenciaDeNivel.Count)
         {
             AchievementManager.NivelACargar = nivelActualIndex + 1;
@@ -554,23 +774,15 @@ public class GameManager : MonoBehaviour
     private IEnumerator AutoScrollCoroutine(RectTransform targetBlock)
     {
         Canvas.ForceUpdateCanvases();
-
         float contentHeight = panelPrograma.rect.height;
         float viewportHeight = panelScrollRect.viewport.rect.height;
 
-        if (contentHeight <= viewportHeight)
-        {
-            yield break;
-        }
+        if (contentHeight <= viewportHeight) yield break;
 
         float blockYPos = Mathf.Abs(targetBlock.anchoredPosition.y);
-
         float maxScrollableY = contentHeight - viewportHeight;
-
         float targetContentY = blockYPos - (viewportHeight / 2.0f);
-
         targetContentY = Mathf.Clamp(targetContentY, 0, maxScrollableY);
-
         float targetNormalizedY = 1.0f - (targetContentY / maxScrollableY);
 
         float duration = 0.25f; 
@@ -580,130 +792,71 @@ public class GameManager : MonoBehaviour
         while (timer < duration)
         {
             timer += Time.deltaTime;
-            float newNormalizedY = Mathf.Lerp(startNormalizedY, targetNormalizedY, timer / duration);
-            panelScrollRect.verticalNormalizedPosition = newNormalizedY;
+            panelScrollRect.verticalNormalizedPosition = Mathf.Lerp(startNormalizedY, targetNormalizedY, timer / duration);
             yield return null;
         }
-
         panelScrollRect.verticalNormalizedPosition = targetNormalizedY;
     }
+
     private void RegistrarIntentoLog(bool ganoIntento)
     {
         if (LogManager.Instance == null) return;
 
         LevelData nivelActual = secuenciaDeNivel[nivelActualIndex];
-        string nivel = nivelActual.nombreNivel;
-
         StringBuilder sbDisponibles = new StringBuilder("Avanzar, GirarDerecha, GirarIzquierda");
-        if (nivelActual.permitirBucleFor) { sbDisponibles.Append(", BucleFor"); }
-        if (nivelActual.permitirCondicionalIf) { sbDisponibles.Append(", CondicionalSi"); }
+        if (nivelActual.permitirBucleFor) sbDisponibles.Append(", BucleFor"); 
+        if (nivelActual.permitirCondicionalIf) sbDisponibles.Append(", CondicionalSi"); 
 
         StringBuilder sbSecuencia = new StringBuilder();
-        foreach (Transform bloqueTransform in panelPrograma)
+        foreach (Transform bloque in panelPrograma)
         {
-            BloqueDeComando comando = bloqueTransform.GetComponent<BloqueDeComando>();
-            if (comando != null)
-            {
-                sbSecuencia.Append(comando.GetSequenceString()).Append(", ");
-            }
-        }
-        float tiempo = Time.time - tiempoInicioNivel;
-
-        LogManager.Instance.LogAttempt(
-            nivel,
-            sbDisponibles.ToString(),
-            sbSecuencia.ToString(),
-            ganoIntento,
-            tiempo
-        );
-    }
-
-    private void IniciarTutorial(List<string> pasos)
-    {
-        if (panelTutorialMaestro == null || textoTutorial == null) return;
-
-        if (pasos == tutorialNivel1)
-        {
-            AchievementManager.Instance.UnlockAchievement(AchievementManager.TUTORIAL_1_VISTO);
-        }
-        else if (pasos == tutorialNivel6)
-        {
-            AchievementManager.Instance.UnlockAchievement(AchievementManager.TUTORIAL_6_VISTO);
-        }
-        else if (pasos == tutorialNivel11)
-        {
-            AchievementManager.Instance.UnlockAchievement(AchievementManager.TUTORIAL_11_VISTO);
+            BloqueDeComando cmd = bloque.GetComponent<BloqueDeComando>();
+            if (cmd != null) sbSecuencia.Append(cmd.GetSequenceString()).Append(", ");
         }
 
-        panelTutorialMaestro.SetActive(true);
-        textoTutorial.gameObject.SetActive(true);
-
-        tutorialActivo = pasos;
-        pasoTutorialActual = 0;
-        MostrarSiguientePasoTutorial();
-    }
-
-    public void MostrarSiguientePasoTutorial()
-    {
-        if (pasoTutorialActual >= tutorialActivo.Count)
-        {
-            panelTutorialMaestro.SetActive(false);
-            return;
-        }
-
-        string paso = tutorialActivo[pasoTutorialActual];
-        textoTutorial.gameObject.SetActive(true);
-        textoTutorial.text = paso;
-        pasoTutorialActual++;
+        LogManager.Instance.LogAttempt(nivelActual.nombreNivel, sbDisponibles.ToString(), sbSecuencia.ToString(), ganoIntento, Time.time - tiempoInicioNivel);
     }
 
     private void CheckearLogros(int nivelActualID, int estrellasGanadas, bool usoBucleFor, bool usoCondicionalSi)
     {
         if (AchievementManager.Instance == null) return;
-
         float tiempoTotal = Time.time - tiempoInicioNivel;
 
-        if (tiempoTotal < 10f && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.LOGRO_SPEEDRUNNER))
-        {
-            AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_SPEEDRUNNER);
-            Debug.Log("LOGRO DESBLOQUEADO: Speedrunner");
-        }
-
-        if (usoBucleFor && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.LOGRO_MAESTRO_BUCLE))
-        {
-            AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_MAESTRO_BUCLE);
-            Debug.Log("LOGRO DESBLOQUEADO: Maestro del Bucle");
-        }
-
-        if (usoCondicionalSi && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.LOGRO_ARQUITECTO))
-        {
-            AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_ARQUITECTO);
-            Debug.Log("LOGRO DESBLOQUEADO: Arquitecto de Decisiones");
-        }
+        if (tiempoTotal < 10f) AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_SPEEDRUNNER);
+        if (usoBucleFor) AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_MAESTRO_BUCLE);
+        if (usoCondicionalSi) AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_ARQUITECTO);
         
         if (nivelActualID == 5)
         {
-            bool nivel1 = AchievementManager.Instance.GetStarsForLevel(1) > 0;
-            bool nivel2 = AchievementManager.Instance.GetStarsForLevel(2) > 0;
-            bool nivel3 = AchievementManager.Instance.GetStarsForLevel(3) > 0;
-            bool nivel4 = AchievementManager.Instance.GetStarsForLevel(4) > 0;
-            bool nivel5 = AchievementManager.Instance.GetStarsForLevel(5) > 0;
-
-            if (nivel1 && nivel2 && nivel3 && nivel4 && nivel5 && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.LOGRO_PENSADOR_LOGICO))
-            {
-                AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_PENSADOR_LOGICO);
-                Debug.Log("LOGRO DESBLOQUEADO: Pensador Lógico");
-            }
+             bool todosNiveles = true;
+             for(int i=1; i<=5; i++) if(AchievementManager.Instance.GetStarsForLevel(i) == 0) todosNiveles = false;
+             
+             if(todosNiveles) AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_PENSADOR_LOGICO);
         }
 
-        if (estrellasGanadas == 3)
+        if (estrellasGanadas == 3 && AchievementManager.Instance.GetTotalLevelsWithThreeStars() >= 10)
         {
-            int total3Estrellas = AchievementManager.Instance.GetTotalLevelsWithThreeStars();
-            if (total3Estrellas >= 10 && !AchievementManager.Instance.IsAchievementUnlocked(AchievementManager.LOGRO_OPTIMIZADOR))
-            {
-                AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_OPTIMIZADOR);
-                Debug.Log("LOGRO DESBLOQUEADO: Optimizador");
-            }
+             AchievementManager.Instance.UnlockAchievement(AchievementManager.LOGRO_OPTIMIZADOR);
         }
+    }
+
+    private IEnumerator RutinaResaltarTemporal()
+    {
+        yield return new WaitForSeconds(1.0f); 
+        
+        ResaltarObjeto(null);
+
+        if (imagenAvatarBruja != null) imagenAvatarBruja.SetActive(true);
+    }
+
+    public int GetBloquesColocadosCount()
+    {
+        if (panelPrograma == null) return 0;
+        return panelPrograma.GetComponentsInChildren<BloqueDeComando>().Length;
+    }
+
+    public bool PasoActualEsArrastrar()
+    {
+        return esTutorialInteractivo && pasoActualData.accionRequerida == TipoAccionTutorial.ArrastrarHechizos;
     }
 }

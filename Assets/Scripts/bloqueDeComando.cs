@@ -133,44 +133,64 @@ public class BloqueDeComando : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // --- RESTRICCIÓN DEL TUTORIAL ---
+        // Verificamos si el GameManager existe y si estamos en tutorial
+        if (GameManager.Instance != null && GameManager.Instance.EstaEnTutorial())
+        {
+            // Solo aplicamos restricción si el paso actual es especificamente "ArrastrarHechizos"
+            if (GameManager.Instance.PasoActualEsArrastrar())
+            {
+                // 1. Bloquear tipos incorrectos (Solo permitimos Avanzar)
+                if (tipoDeComando != TipoComando.Avanzar) return; 
+                
+                // 2. Bloquear cantidad (Si ya hay 3 o más, no dejamos sacar otro)
+                if (GameManager.Instance.GetBloquesColocadosCount() >= 3) return;
+            }
+        }
+        // --------------------------------
+
         if (esOriginalDelBanco)
         {
             GameObject clon = Instantiate(gameObject, transform.root);
             clon.transform.position = eventData.position;
             clon.transform.SetAsLastSibling();
+            
             BloqueDeComando clonScript = clon.GetComponent<BloqueDeComando>();
             clonScript.esOriginalDelBanco = false;
             clonScript.padreOriginal = this.transform.parent;
             clonScript.canvasGroup = clon.GetComponent<CanvasGroup>();
             clonScript.canvasGroup.blocksRaycasts = false;
+            
             eventData.pointerDrag = clon;
-            return;
         }
-
-        padreOriginal = transform.parent;
-
-        if (padreOriginal != null)
+        else
         {
-            ResizeBloqueFor resizerPadre = padreOriginal.GetComponentInParent<ResizeBloqueFor>();
-            if (resizerPadre != null)
+            padreOriginal = transform.parent;
+            
+            // Lógica de redimensionamiento
+            if (padreOriginal != null)
             {
-                resizerPadre.IniciarActualizacionAltura();
-            }
-            else
-            {
-                PanelDinamico panelDinamicoPadre = padreOriginal.GetComponentInParent<PanelDinamico>();
-                if (panelDinamicoPadre != null)
+                ResizeBloqueFor resizerPadre = padreOriginal.GetComponentInParent<ResizeBloqueFor>();
+                if (resizerPadre != null)
                 {
-                    panelDinamicoPadre.IniciarActualizacionAltura();
+                    resizerPadre.IniciarActualizacionAltura();
+                }
+                else
+                {
+                    PanelDinamico panelDinamicoPadre = padreOriginal.GetComponentInParent<PanelDinamico>();
+                    if (panelDinamicoPadre != null)
+                    {
+                        panelDinamicoPadre.IniciarActualizacionAltura();
+                    }
                 }
             }
-        }
 
-        transform.SetParent(transform.root);
-        transform.SetAsLastSibling();
-        transform.localScale = Vector3.one;
-        canvasGroup.blocksRaycasts = false;
-        canvasGroup.alpha = 0.6f;
+            transform.SetParent(transform.root);
+            transform.SetAsLastSibling();
+            transform.localScale = Vector3.one;
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.alpha = 0.6f;
+        }
     }
 
     public void OnDrag(PointerEventData eventData)
